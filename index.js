@@ -1,8 +1,65 @@
 const express = require('express');
+const cors= require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
 
+// middleware
+
+app.use(cors())
+app.use(express.json());
+
+// mongodb connection
+
+const uri = `mongodb+srv://dbuse1:trD8rPchraKwIgen@cluster0.u3hia.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+async function run() {
+try{
+    await client.connect();
+    const collection = client.db("content").collection("post");
+    // http://localhost:5000/posts
+    app.get('/posts', async(req, res)=> {
+        const query = {}
+        const cursor = collection.find(query);
+        const posts = await cursor.toArray();
+        res.send(posts)
+    })
+    // http://localhost:5000/post
+    app.post('/post', async(req, res) =>{
+        const newPost = req.body;
+        const result = await collection.insertOne(newPost)
+        res.send(result)
+      });
+    //   http://localhost:5000/post/6390b5399e0d78aae8e9f56f
+     app.put('/post/:id', async(req, res)=>{
+        const id=req.params.id
+        const data = req.body;
+        const filter = {_id: ObjectId(id)};
+        const updateDoc = {
+            $set: {
+                name: data.name,
+                textData: data.textData
+            },
+        }
+        const result = await collection.updateOne(filter, updateDoc, options);
+        res.send(result);
+     })
+    //  http://localhost:5000/post/6390b5399e0d78aae8e9f56f
+     // delete
+     app.delete('/post/:id', async(req, res)=> {
+        const id=req.params.id
+        const filter = {_id: ObjectId(id)};
+        const result = await collection.deleteOne(filter);
+        res.send(result);
+     })
+}
+finally{
+}
+}
+
+run().catch(console.dir)
 
 app.get('/', (req, res) => {
     res.send('Running My Node CRAD Server')
