@@ -18,37 +18,42 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
 try{
     await client.connect();
-    const collection = client.db("content").collection("post");
+    const collection = client.db("content").collection("contents");
     // http://localhost:5000/posts
-    app.get('/posts', async(req, res)=> {
+    app.get('/contents', async(req, res)=> {
         const query = {}
         const cursor = collection.find(query);
         const posts = await cursor.toArray();
         res.send(posts)
     })
-    // http://localhost:5000/post
+    // http://localhost:5000/contents
     app.post('/post', async(req, res) =>{
         const newPost = req.body;
         const result = await collection.insertOne(newPost)
         res.send(result)
       });
     //   http://localhost:5000/post/6390b5399e0d78aae8e9f56f
-     app.put('/post/:id', async(req, res)=>{
-        const id=req.params.id
+     app.put('/contents/:id', async(req, res)=>{
+        const id = req.params.id
         const data = req.body;
         const filter = {_id: ObjectId(id)};
+        const options = { upsert: true };
         const updateDoc = {
             $set: {
-                name: data.name,
-                textData: data.textData
+                title: data.title,
+                category: data.category,
+                image: data.image,
+                date: data.date,
+                description: data.description,
             },
         }
         const result = await collection.updateOne(filter, updateDoc, options);
         res.send(result);
+        // console.log(data)
      })
     //  http://localhost:5000/post/6390b5399e0d78aae8e9f56f
      // delete
-     app.delete('/post/:id', async(req, res)=> {
+     app.delete('/contents/:id', async(req, res)=> {
         const id=req.params.id
         const filter = {_id: ObjectId(id)};
         const result = await collection.deleteOne(filter);
